@@ -2,7 +2,8 @@ const express = require('express')
 const consola = require('consola')
 const { Nuxt, Builder } = require('nuxt')
 const app = express()
-const convertRouter = require('./convert-api')
+const videoConvertRouter = require('./video-convert')
+const audioDownloadRouter = require('./audio-download')
 const host = process.env.HOST || '127.0.0.1'
 const port = process.env.PORT || 3000
 
@@ -22,7 +23,7 @@ async function start() {
     await builder.build()
   }
 
-  app.use('/api', convertRouter)
+  app.use('/api', videoConvertRouter, audioDownloadRouter)
 
   // Give nuxt middleware to express
   app.use(nuxt.render)
