@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const fs = require('fs')
+const _fs = require('fs')
+const fs = require('fs').promises
 const multer = require('multer')
 const ffmpeg = require('fluent-ffmpeg')
 const path = require('path')
@@ -8,11 +9,12 @@ const consola = require('consola')
 const nanoid = require('nanoid')
 
 //ファイルの保存先を設定
-const saveFolder = path.resolve(__dirname, 'uploads')
+const uploadFolder = path.resolve(__dirname, 'uploads')
+const convertFolder = path.resolve(__dirname, 'converted')
 
 const storage = multer.diskStorage({
   destination: function(req, file, callback) {
-    callback(null, saveFolder)
+    callback(null, uploadFolder)
   },
   filename: function(req, file, callback) {
     callback(null, nanoid())
@@ -20,12 +22,8 @@ const storage = multer.diskStorage({
 })
 
 function convert(inputFilename, outputFilename) {
-  const inputFilePath = path.resolve(saveFolder, inputFilename)
-  const outputFilePath = path.resolve(
-    __dirname,
-    'converted',
-    outputFilename + '.flac'
-  )
+  const inputFilePath = path.resolve(uploadFolder, inputFilename)
+  const outputFilePath = path.resolve(convertFolder, outputFilename + '.flac')
   consola.info('targetPath : ' + inputFilePath)
   consola.info('savePath : ' + outputFilePath)
   const proc = ffmpeg(inputFilePath)
@@ -40,23 +38,14 @@ function convert(inputFilename, outputFilename) {
       consola.info('an error happened: ' + err.message)
     })
     .save(outputFilePath)
+  consola.info(`proc => ${JSON.stringify(proc)} `)
   return outputFilename
 }
 
-function checkUploadPath(req, res, next) {
-  fs.exists(saveFolder, function(exists) {
-    if (exists) {
-      next()
-    } else {
-      fs.mkdir(saveFolder, function(err) {
-        if (err) {
-          consola.error('Error in folder creation')
-          next()
-        }
-        next()
-      })
-    }
-  })
+function createUploadFolder(req, res, next) {
+  fs.mkdir(uploadFolder, { recursive: true })
+  fs.mkdir(convertFolder, { recursive: true })
+  next()
 }
 
 function removeExtention(filename) {
@@ -65,14 +54,20 @@ function removeExtention(filename) {
 
 const uploadVideo = multer({ storage: storage }).single('source')
 
-router.post('/convert', checkUploadPath, uploadVideo, function(req, res) {
-  consola.info('start convert... : ' + req.file.originalname)
-  let resultFilename = convert(
+router.post('/convert', createUploadFolder, uploadVideo, function(req, res) {
+  consola.info('start convert... : ' + JSON.stringify(req.file))
+  const responseFileName = removeExtention(req.file.originalname) + '.flac'
+  const resultFilename = convert(
     req.file.filename,
     removeExtention(req.file.originalname)
   )
+  consola.info(resultFilename)
   consola.info('complete convert!')
   res.send(resultFilename)
+})
+
+router.post('/convert/test', function(req, res) {
+  res.send('test')
 })
 
 module.exports = router
