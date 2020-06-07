@@ -21,9 +21,10 @@ const storage = multer.diskStorage({
   }
 })
 
-function convert(inputFilename, outputFilename) {
+function convert(inputFilename) {
   const inputFilePath = path.resolve(uploadFolder, inputFilename)
-  const outputFilePath = path.resolve(convertFolder, outputFilename + '.flac')
+  const outputFileName = `${inputFilename}.flac`
+  const outputFilePath = path.resolve(convertFolder, outputFileName)
   consola.info('targetPath : ' + inputFilePath)
   consola.info('savePath : ' + outputFilePath)
   const proc = ffmpeg(inputFilePath)
@@ -39,7 +40,7 @@ function convert(inputFilename, outputFilename) {
     })
     .save(outputFilePath)
   consola.info(`proc => ${JSON.stringify(proc)} `)
-  return outputFilename
+  return outputFileName
 }
 
 function createUploadFolder(req, res, next) {
@@ -63,11 +64,13 @@ router.post('/convert', createUploadFolder, uploadVideo, function(req, res) {
   )
   consola.info(resultFilename)
   consola.info('complete convert!')
-  res.send(resultFilename)
+  res.json({ fileName: resultFilename })
 })
 
-router.post('/convert/test', function(req, res) {
-  res.send('test')
+router.get('/test', function(req, res) {
+  res.json({
+    message: 'test'
+  })
 })
 
 module.exports = router

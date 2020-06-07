@@ -1,17 +1,24 @@
 <template>
   <v-card>
     <v-card-actions>
-      <v-icon @click="remove()">far fa-times-circle</v-icon>
+      <v-btn 
+        class="mr-3"
+        text 
+        icon>
+        <v-icon 
+          @click="remove()">far fa-times-circle</v-icon>
+      </v-btn>
       {{ fileName }}
       <v-spacer/>
       <v-btn 
-        :show="!converted || converting"
+        v-show="!converted"
+        :loading="converting"
         outline
         @click="upload()" >Upload</v-btn>
       <v-btn 
-        :show="converted"
+        v-show="converted"
         outline
-        @click="upload()" >Download</v-btn>
+        @click="download()" >Download</v-btn>
     </v-card-actions>
   </v-card>
 </template>
@@ -38,35 +45,45 @@ export default {
     }
   },
   methods: {
-    upload: function() {
+    test: async function() {
+      const response = await fetch('/api/test')
+      const resJson = await response.json()
+      console.log(response)
+      console.log(resJson.message)
+      console.log(JSON.stringify(resJson))
+    },
+    upload: async function() {
       this.converting = true
       const formData = new FormData()
       formData.append('source', this.inputFile)
-      fetch('/api/convert', {
+      const res = await fetch('/api/convert', {
         method: 'POST',
         body: formData
       })
-        .then(response => response.json())
-        .then(response => {
-          this.convertedFileName = response
-          console.log('Success:', JSON.stringify(response))
-        })
+      const response = await res.json()
+      console.log('Success:' + JSON.stringify(response))
+      console.log('Success:' + response.fileName)
+
+      this.convertedFileName = response.fileName
       console.log('upload!')
-      //HTTP POST use fetch api
       this.converting = false
       this.converted = true
     },
     remove: function() {
       this.$emit('remove')
     },
-    download: function() {
+    download: async function() {
       console.log('download start!')
-      fetch(`/download/${test}`, {
-        method: 'POST',
-        body: formData
-      })
-        .then(response => response.json())
-        .then(response => console.log('Success:', JSON.stringify(response)))
+      console.log('filename => ' + this.convertedFileName)
+      const response = await fetch(`/api/download/${this.convertedFileName}`)
+      console.log(response)
+      const convertedFile = await response.blob()
+      const url = window.URL.createObjectURL(convertedFile)
+      const link = document.createElement('a')
+      link.download = this.fileName
+      link.href = url
+      link.click()
+      window.URL.revokeObjectURL(url)
     }
   }
 }

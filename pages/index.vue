@@ -9,12 +9,12 @@
       name="file-upload" 
       style="display: none;" 
       @change="handleFiles($event)">
-    <li 
+    <div 
       v-for="(file, index) in uploadFiles" 
-      :key="file.size">
+      :key="index">
       <file-item 
         :input-file="file" 
-        @remove="removeItem(index)"/></li>
+        @remove="removeItem(index)"/></div>
   </div>
 </template>
 

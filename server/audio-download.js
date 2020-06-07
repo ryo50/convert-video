@@ -6,10 +6,10 @@ const consola = require('consola')
 
 router
   .get('/download/:filename', function(req, res) {
-    consola.info('request download file' + req.params.originalname + '.flac')
+    consola.info('request download file' + req.params.filename + '.flac')
     res.download(
-      path.resolve(__dirname, 'converted', req.params.originalname),
-      req.params.originalname,
+      path.resolve(__dirname, 'converted', req.params.filename),
+      req.params.filename,
       function(err) {
         if (err) {
           consola.err(err)
