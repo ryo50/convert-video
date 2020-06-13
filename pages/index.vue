@@ -41,6 +41,9 @@ export default {
       let files = e.target.files || e.dataTransfer.files
       console.log(files)
       this.uploadFiles.push(files[0])
+      console.log('upload : ' + this.uploadFiles)
+      //同じオブジェクトをinputで選択するとchangeイベントが発生しないため
+      document.getElementById('file-upload').value = ''
     },
     removeItem: function(index) {
       console.log('remove item')
